@@ -2,7 +2,7 @@
 %globals that will be needed to mediate data recording
 
  
-SetEEGConfig_series2000;  %call the setup script to configure settings
+SetEEGConfig_series3000;  %call the setup script to configure settings
 
 
 %*********set up some global structures to hold data****************
