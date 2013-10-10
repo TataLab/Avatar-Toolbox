@@ -58,9 +58,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         tD_double = double(tD_int32) .* EEG_Config.voltageRange / (2^32);% - EEG_Config.voltageRange/2;  %times the range, divided by 2^24 converts from ADC units to volts - half the range centers it %%since the number is actually 32 bits a division by 2^32 is required instead of 2^24
         
         if(eegSession.D(1,frameStarts(1)+5)==128)
-            eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-2) = reshape(tD_double,8,[]);
+            eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-2) = reshape(tD_double,EEG_Config.numChans,[]);
         else
-            eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1) = reshape(tD_double,8,[]);
+            eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1) = reshape(tD_double,EEG_Config.numChans,[]);
         end
         
         %********End EEG Data acquisition *************
