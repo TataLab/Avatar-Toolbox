@@ -44,8 +44,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         %find what we know to be the first 4 bytes of the header
         %we have to compute the appropriate frame size for bytes 3 and 4
         frameSizeBytes=typecast(uint16(EEG_Config.frameSize),'uint8'); %take the 16-bit number and make it two 8-bit numbers
-      
+              
         frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %the frame start is the first element of this vector  (which should never be more than size 2 anyway)
+        
         eegSession.frameStartsList=[eegSession.frameStartsList frameStarts];
         %*******EEG Data************
         %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
@@ -100,11 +101,20 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         
         
         %*******Handle Time data*******
-        eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time 
+        %eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time 
         %******Time data********
         
         %%!!change this!  This is stamping the first sample in this frame
         %%with a time much closer to that of the last sample in the frame
+        
+        
+        
+        %*******Handle Time data*******
+        eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
+        %******Time data********
+        
+        
+        
         
         %*****Clean up the data buffer and update the frame index for
         %the next frame
