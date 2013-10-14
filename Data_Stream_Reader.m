@@ -1,7 +1,9 @@
 %Sets up serial communication with Avatar recorder and creates some
 %globals that will be needed to mediate data recording
 
- 
+%just testing 
+
+
 SetEEGConfig_series3000;  %call the setup script to configure settings
 
 
