@@ -25,5 +25,5 @@ EEG_Config.voltageRange = double(9.0 );  %a function of the gain setting in your
 
 
 %these are parameters specific to your data collection session
-EEG_Config.sessionDuration = 60*30; %how long will you collect data in seconds?  Better to overstimate!
+EEG_Config.sessionDuration = 60*10; %how long will you collect data in seconds?  Better to overstimate!
 
