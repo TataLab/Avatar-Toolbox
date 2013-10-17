@@ -69,7 +69,14 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time
         %******Time data********
         
+        %added line from the 3000 series timestamping. 
+        eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);   %set the first sample of this time stamp to be an 
+                                                                                                                                                %estimate of the system time when it was recorded.  
+                                                                                                                                                %Since we're chunking > 1 data frame we know it was 
+                                                                                                                                                %at least sample period x num samples per frame ago 
+
        
+                                                                                                                                                
         %*****Clean up the data buffer and update the frame index for
         %the next frame
         if(eegSession.D(1,frameStarts(1)+5)==128)
