@@ -4,7 +4,8 @@
 global EEG_Config; EEG_Config = struct;
 
 
-EEG_Config.device = '/dev/tty.AvatarEEG03019-SPPDev';  %the name of the serial port object
+%EEG_Config.device = '/dev/tty.AvatarEEG03019-SPPDev';  %the name of the serial port object
+EEG_Config.device = '/dev/tty.AvatarEEG04035-SPPDev'; %4000 series avatar port name. 
 EEG_Config. version = 'series3000'; %flag which Avatar recorder we're using
 EEG_Config.SRate = 500; %sample rate
 EEG_Config.protocol = 3; %protocol version

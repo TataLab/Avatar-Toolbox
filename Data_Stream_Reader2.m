@@ -28,7 +28,7 @@ eegSession.frameStartsList = [];
  %.originalTimes     - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
  %.corrupt                 -holds an account of any frames that fail a CRC
  %check
- 
+
  
  
 global eegD; eegD=struct; 

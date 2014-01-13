@@ -75,7 +75,8 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
                                                                                                                                                 %Since we're chunking > 1 data frame we know it was 
                                                                                                                                                 %at least sample period x num samples per frame ago 
 
-       
+      
+       %********End Time data******
                                                                                                                                                 
         %*****Clean up the data buffer and update the frame index for
         %the next frame
