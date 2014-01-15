@@ -45,9 +45,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         %we have to compute the appropriate frame size for bytes 3 and 4
         frameSizeBytes=typecast(uint16(EEG_Config.frameSize),'uint8'); %take the 16-bit number and make it two 8-bit numbers
               
-        %frameStarts = strfind(eegSession.D,[170 68 frameSizeBytes(2) frameSizeBytes(1)]);  %4000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
+        frameStarts = strfind(eegSession.D,[170 68 frameSizeBytes(2) frameSizeBytes(1)]);  %4000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
         
-        frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %3000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
+        %frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %3000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
         
         eegSession.frameStartsList=[eegSession.frameStartsList frameStarts];
         %*******EEG Data************
