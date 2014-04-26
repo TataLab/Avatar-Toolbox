@@ -97,8 +97,7 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         tD_double = double(tD_int32) .* EEG_Config.voltageRange / (2^32);  %times the range, divided by 2^24 converts from ADC units to volts since the number is actually 32 bits a division by 2^32 is required instead of 2^24
        
         %sorts the data into the amount of rows that there is channels with
-        %each row corresponding to the appropriate channel, and then the
-        %data gets appended to the eegD.data array. 
+        %each row corresponding to the appropriate 
         eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1) = reshape(tD_double,EEG_Config.numChans,[]);
        
         %********End EEG Data Collection*************
