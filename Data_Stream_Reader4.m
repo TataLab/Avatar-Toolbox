@@ -1,8 +1,15 @@
 %Sets up serial communication with Avatar recorder and creates some
 %globals that will be needed to mediate data recording
 
-SetEEGConfig_series4000;  %call the setup script to configure settings
+dev=input('Which series device are you using: 2=2000, 3=3000, 4=4000: ');
 
+if(dev==4)
+SetEEGConfig_series4000;  %call the setup script to configure settings
+elseif(dev==3)
+SetEEGConfig_series3000;
+elseif(dev==2)
+SetEEGConfig_series2000;
+end
 
 %*********set up some global structures to hold data****************
 
@@ -33,6 +40,7 @@ eegSession.frameStartsList = [];
 global eegD; eegD=struct; 
 eegD.data = double(zeros(EEG_Config.numChans,EEG_Config.sessionDuration*EEG_Config.SRate)); 
 eegD.time = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
+eegD.time2 = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.originalTimes = uint64([]);
 eegD.corrupt = [];  
 
@@ -60,7 +68,7 @@ eegSession.EEGDevicePort.BytesAvailableFcnCount=EEG_Config.frameSize; % in bytes
 %register the callback to be called when the data buffer is full, pass it
 %the size of the epoch to get from the serial port buffer
 
-
+%Not implemented as far as I can see. 
 eegSession.elapsedTimeBetweenFrames = [];  %use tic and toc to actually measure the elapsed times between data frames.  It should be very very close to 1/sample rate * number of samples per frame
 eegSession.bestGuessAtDeltaT=uint64(0);  %on each frame we'll tic and average the most recent tics and try to make a best guess conversion factor to convert Avatar time to system time
 

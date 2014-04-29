@@ -9,7 +9,7 @@ function getNewData_series4000(EEGDevicePort,~,~)
 %
 %known problems:
 %           -time stamps are not quite right because the first sample in
-%           the buffer fram is stamped with tic() when the callback
+%           the buffer frame is stamped with tic() when the callback
 %           executes.  It should be the last sample!
 %
 %           -waits for two full frames to arrive before starting to parse,
@@ -49,7 +49,11 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         %frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %3000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
         
         eegSession.frameStartsList=[eegSession.frameStartsList frameStarts];
-        %*******EEG Data************
+        
+        %*************EEG Data*************************
+        
+        %*************CRC Check************************
+        
         %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
         %then, sorts them into chans x samples
        
@@ -82,7 +86,7 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
        
         end
         
-        %End of the CRC check. 
+        %***************End CRC Check****************** 
         
 
         tD = eegSession.D((frameStarts(1)+EEG_Config.headerSize):(frameStarts(1)+EEG_Config.headerSize+EEG_Config.dataBytesPerFrame-1));
@@ -104,18 +108,23 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         %********End EEG Data Collection*************
         
         
-        %*******Handle Time data*******
-        %eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time 
-        %******Time data********
         
-        %%!!change this!  This is stamping the first sample in this frame
-        %%with a time much closer to that of the last sample in the frame
+        %********Handle Time data********************
         
+        %Possible more accurate time stamping. Instead of just going a full
+        %frame back in time we also go the fraction of a frame extra to get
+        %to the very start of the frame we are recording. 
         
-        
-        %*******Handle Time data*******
+        %Rolling back an entire frames worth of Data timestamps
+        eegD.time2(1,eegSession.dataFrameIndex)=currentFrameSystemTime-uint64(EEG_Config.samplesPerFrame*1/EEG_Config.SRate*1000000000);
+        %Rolling back the extra samples that were collected after the frame
+        %we are timestamping. With the 4000 series it appears to always
+        %retrieve the data starting in the proper spot. 
+        eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
+        %Original time stamping method. 
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
-        %******Time data********
+        
+        %********End Time data***********************
         
         
         
@@ -138,7 +147,6 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
 end %if bluetooth stream is ready
 
 end %the function is done
-
 
 
 

@@ -9,7 +9,7 @@ function getNewData_series4000(EEGDevicePort,~,~)
 %
 %known problems:
 %           -time stamps are not quite right because the first sample in
-%           the buffer fram is stamped with tic() when the callback
+%           the buffer frame is stamped with tic() when the callback
 %           executes.  It should be the last sample!
 %
 %           -waits for two full frames to arrive before starting to parse,
@@ -97,7 +97,8 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         tD_double = double(tD_int32) .* EEG_Config.voltageRange / (2^32);  %times the range, divided by 2^24 converts from ADC units to volts since the number is actually 32 bits a division by 2^32 is required instead of 2^24
        
         %sorts the data into the amount of rows that there is channels with
-        %each row corresponding to the appropriate 
+        %each row corresponding to the appropriate channel, and then the
+        %data gets appended to the eegD.data array. 
         eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1) = reshape(tD_double,EEG_Config.numChans,[]);
        
         %********End EEG Data Collection*************
@@ -113,6 +114,13 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         
         
         %*******Handle Time data*******
+        %Possible more accurate time stamping. Instead of just going a full
+        %frame back in time we also go the fraction of a frame extra to get
+        %to the very start of the frame we are recording. 
+        eegD.time(1,eegSe
+        %eegD.time2(1,eegSession.dataFrameIndex)=currentFrameSystemTime-uint64((EEG_Config.samplesPerFrame+((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/(EEG_Config.bytesPerSample*EEG_Config.numChans)))*1/EEG_Config.SRate*1000000000);
+        eegD.time2(1,eegSession.dataFrameIndex)=currentFrameSystemTime-uint64(EEG_Config.samplesPerFrame*1/EEG_Config.SRate*1000000000);
+        eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
         %******Time data********
         
@@ -137,7 +145,6 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
 end %if bluetooth stream is ready
 
 end %the function is done
-
 
 
 

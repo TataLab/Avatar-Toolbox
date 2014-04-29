@@ -18,7 +18,7 @@ eegSession.frameStartsList = [];
 %here's the main data structure:
 
 %the eegD struct contains the following fields:
-% .data                     -  the first filed of the eegD cell structure will contain an 8 row array of doubles to hold eeg data 
+% .data                     -  the first filed of the eegD cell structure will contain a 2-8 row array of doubles to hold eeg data. The size depends on how many channels are enabled.  
 %.time                      - the second element of the eegD cell structure will contain a vector of
 %                                   uint64s to hold the time stamps,  we'll
 %                                   collect one time stamp for each frame
@@ -61,6 +61,7 @@ eegSession.EEGDevicePort.BytesAvailableFcnCount=EEG_Config.frameSize; % in bytes
 %the size of the epoch to get from the serial port buffer
 
 
+%Not currently in use. 
 eegSession.elapsedTimeBetweenFrames = [];  %use tic and toc to actually measure the elapsed times between data frames.  It should be very very close to 1/sample rate * number of samples per frame
 eegSession.bestGuessAtDeltaT=uint64(0);  %on each frame we'll tic and average the most recent tics and try to make a best guess conversion factor to convert Avatar time to system time
 
