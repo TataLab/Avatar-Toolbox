@@ -9,9 +9,9 @@ EEG_Config. version = 'series3000'; %flag which Avatar recorder we're using
 EEG_Config.SRate = 500; %sample rate
 EEG_Config.protocol = 3; %protocol version
 EEG_Config.numChans = 8; %minimum is 2 (apparently...setting NUMBER_OF_CHANNELS to 1 in the config.txt file on your device may cause it to incorrectly report the frame size...an undocumented limitation on the avatar hardware?)
-EEG_Config.headerSize=20;
-EEG_Config.numCRCBytesPerFrame = 2;
-EEG_Config.samplesPerFrame = 16;
+EEG_Config.headerSize=20; %The header size for each frame 20 in 3000/4000 series 12 in 2000 series. 
+EEG_Config.numCRCBytesPerFrame = 2; %The number of crc Bytes at the end of the frame. 2 in 3000/4000 series 0 in 2000 series.  
+EEG_Config.samplesPerFrame = 16; %The number of samples per each frame. 
 EEG_Config.bytesPerSample = 3; %24-bit values from the ADC
 
 EEG_Config.dataBytesPerFrame=EEG_Config.numChans*EEG_Config.samplesPerFrame*EEG_Config.bytesPerSample; %bytes of data per frame

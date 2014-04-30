@@ -18,15 +18,15 @@ eegSession.frameStartsList = [];
 %here's the main data structure:
 
 %the eegD struct contains the following fields:
-% .data                     -  the first filed of the eegD cell structure will contain a 2-8 row array of doubles to hold eeg data. The size depends on how many channels are enabled.  
-%.time                      - the second element of the eegD cell structure will contain a vector of
-%                                   uint64s to hold the time stamps,  we'll
-%                                   collect one time stamp for each frame
-%                                   using tic() and then interpolate the
-%                                   others
- %.originalTimes     - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
- %.corrupt                 -holds an account of any frames that fail a CRC
- %check
+% .data                     -  the first filed of the eegD cell structure will contain a 2-8 row array of doubles to hold eeg data. The size depends on how many channels are enabled. 
+%
+%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll
+%                                   collect one time stamp for each frame using tic() and then interpolate the others
+%
+%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
+%
+%.corrupt                   -holds an account of any frames that fail a CRC
+%check
  
  
  

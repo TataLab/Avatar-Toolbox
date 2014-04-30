@@ -46,16 +46,11 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
               
         frameStarts = strfind(eegSession.D,[170 68 frameSizeBytes(2) frameSizeBytes(1)]);  %4000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
         
-        %frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %3000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
-        
         eegSession.frameStartsList=[eegSession.frameStartsList frameStarts];
         
         %*************EEG Data*************************
         
         %*************CRC Check************************
-        
-        %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
-        %then, sorts them into chans x samples
        
         %getting the entire frame not including the CRC bits so that we can
         %calculate a new CRC to check against the existing one. 
@@ -87,6 +82,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         end
         
         %***************End CRC Check****************** 
+         
+        %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
+        %then, sorts them into chans x samples
         
 
         tD = eegSession.D((frameStarts(1)+EEG_Config.headerSize):(frameStarts(1)+EEG_Config.headerSize+EEG_Config.dataBytesPerFrame-1));
@@ -129,10 +127,12 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         
         
         
-        %*****Clean up the data buffer and update the frame index for
-        %the next frame
+        %*****Clean up data buffer and update********
+        
         eegSession.dataFrameIndex = eegSession.dataFrameIndex+EEG_Config.samplesPerFrame;
         eegSession.D(1:EEG_Config.frameSize) = [];  %remove the entire first frame worth of data from the data buffer
+        
+        %*****End Clean up and update****************
         
         
         %check to see if we've run out of session

@@ -17,14 +17,13 @@ function getNewData_series3000(EEGDevicePort,~,~)
 %           seems we need to do this to ensure that we have at least one
 %           full frame to work on in the D buffer
 
-
-%grab the system time right away, we'll use it below
-currentFrameSystemTime = tic();
-
-
 global eegD;
 global EEG_Config;
 global eegSession;
+
+
+%grab the system time right away, we'll use it below
+currentFrameSystemTime = tic();
 
 tD_int32 = cast(zeros(1,EEG_Config.numChans*EEG_Config.samplesPerFrame),'int32'); %initialize a matrix to hold 32-bit values
 
@@ -48,9 +47,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         frameStarts = strfind(eegSession.D,[170 67 frameSizeBytes(2) frameSizeBytes(1)]);  %3000 series%the frame start is the first element of this vector  (which should never be more than size 2 anyway)
         
         eegSession.frameStartsList=[eegSession.frameStartsList frameStarts];
+        
         %*******EEG Data************
-        %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
-        %then, sorts them into chans x samples
+        %*******CRC Check***********
        
         %getting the entire frame not including the CRC bits so that we can
         %calculate a new CRC to check against the existing one. 
@@ -81,7 +80,10 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
        
         end
         
-        %End of the CRC check. 
+        %*******End CRC Check*********** 
+        
+        %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
+        %then, sorts them into chans x samples
         
         %Grab all of the data samples from the current frame. Leave out the
         %header and the crc bytes. 
@@ -99,29 +101,23 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         eegD.data(1:EEG_Config.numChans,eegSession.dataFrameIndex:eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1) = reshape(tD_double,EEG_Config.numChans,[]);
        
         %********End EEG Data Collection*************
-        
-        
-        %*******Handle Time data*******
-        %eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time 
-        %******Time data********
-        
-        %%!!change this!  This is stamping the first sample in this frame
-        %%with a time much closer to that of the last sample in the frame
-        
-        
+       
         
         %*******Handle Time data*******
         
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
-        %******Time data********
+        
+        %*******End Time data**********
         
         
         
         
-        %*****Clean up the data buffer and update the frame index for
-        %the next frame
+        %*****Clean up data buffer and update********
+      
         eegSession.dataFrameIndex = eegSession.dataFrameIndex+EEG_Config.samplesPerFrame;
         eegSession.D(1:EEG_Config.frameSize) = [];  %remove the entire first frame worth of data from the data buffer
+        
+        %*****End Clean and update*******************
         
         
         %check to see if we've run out of session

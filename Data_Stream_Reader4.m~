@@ -28,13 +28,15 @@ eegSession.frameStartsList = [];
 
 %the eegD struct contains the following fields:
 % .data                     -  the first filed of the eegD cell structure will contain an 1-8 row array of doubles to hold eeg data based on how many channels are enabled in the Avatar config file 
-%
-%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll collect one time stamp for each frame using tic() and then interpolate the others
-% 
-%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
-% 
-%.corrupt                   -holds an account of any frames that fail a CRC
+%.time                      - the second element of the eegD cell structure will contain a vector of
+%                                   uint64s to hold the time stamps,  we'll
+%                                   collect one time stamp for each frame
+%                                   using tic() and then interpolate the
+%                                   others
+ %.originalTimes     - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
+ %.corrupt                 -holds an account of any frames that fail a CRC
  %check
+ 
  
  
 global eegD; eegD=struct; 
@@ -43,7 +45,6 @@ eegD.time = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.time2 = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.originalTimes = uint64([]);
 eegD.corrupt = [];  
-
 
 %%%%%%%%%%% Set up the serial port object%%%%%%%%%%
 %this is specific to the Mac OS but probably pretty similar on other

@@ -66,37 +66,32 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         
         
         %*******Handle Time data*******
-         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);   %set the first sample of this time stamp to be an 
-                                                                                                                                                %estimate of the system time when it was recorded.  
-                                                                                                                                                %Since we're chunking > 1 data frame we know it was 
-                                                                                                                                                %at least sample period x num samples per frame ago 
-
-      
+        eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime;  %set the first sample of this time stamp to be the current system time
        
         %*******End Time data**********
         
-                                                                                                                                                
-        %*****Clean up data buffer and update********
+        %added line from the 3000 series timestamping. 
         
+      
+       %********End Time data******
+                                                                                                                                                
+        %*****Clean up the data buffer and update the frame index for
+        %the next frame
         if(eegSession.D(1,frameStarts(1)+5)==128)
             eegSession.dataFrameIndex = eegSession.dataFrameIndex+EEG_Config.samplesPerFrame-1;
         else
             eegSession.dataFrameIndex = eegSession.dataFrameIndex+EEG_Config.samplesPerFrame;
         end
-        eegSession.D(1:EEG_Config.frameSize) = [];  %remove the entire first frame from the data buffer  
-        
-        %*****End Clean up and Update***************
+        eegSession.D(1:EEG_Config.frameSize) = [];  %remove the entire first frame from the data buffer        
+    end
     
     
+    if((eegSession.dataFrameIndex/EEG_Config.SRate)>=EEG_Config.sessionDuration)
+        eegSession.btDataStreamReady=0;
+        fclose(eegSession.EEGDevicePort);
+        display('Problem.  You ran out of session duration. Abort.');
+    end %two frames available
     
-        if((eegSession.dataFrameIndex/EEG_Config.SRate)>=EEG_Config.sessionDuration)
-            eegSession.btDataStreamReady=0;
-            fclose(eegSession.EEGDevicePort);
-            display('Problem.  You ran out of session duration. Abort.');
-        end 
-    
-    end%two frames available
-     
 end %the if BTDataStreamReady
 
 
