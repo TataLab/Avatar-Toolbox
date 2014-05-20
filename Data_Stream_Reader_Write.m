@@ -1,8 +1,54 @@
-%Sets up serial communication with Avatar recorder and creates some
+%This file is capable of running any current version of the Avatar device,
+%it sets up serial communication with Avatar recorder and creates some
 %globals that will be needed to mediate data recording
- 
-SetEEGConfig_series2000;  %call the setup script to configure settings
 
+%Grab input from the user which series device they are using, and then call
+%the appropriate set up. 
+
+LoadYarp;
+import yarp.Port
+import yarp.Bottle
+
+
+global port;
+global bot;
+global frameSize;
+global inTraining;
+global sendTrain;
+
+sendTrain=1;
+
+inTraining=500;
+
+frameSize=500;
+
+bot=Bottle;
+
+%port=BufferedPortBottle;
+port=Port;
+%first close the port just in case
+port.close;
+
+disp('Going to open port /matlab/write');
+port.open('/matlab/write');
+
+disp('Please connect to a bottle sink (e.g. yarp write)');
+disp('The program closes when ''quit'' is received');
+
+
+dev=input('Which series device are you using: 2=2000, 3=3000, 4=4000: ');
+SN=input('What is your device serial number(ex:04035) : ', 's');
+
+if(dev==4)
+SetEEGConfig_series4000;  %call the setup script to configure settings
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
+elseif(dev==3)
+SetEEGConfig_series3000;
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
+elseif(dev==2)
+SetEEGConfig_series2000;
+EEG_Config.device=['/dev/tty.LairdBTM' SN '-SPPDev'];
+end
 
 %*********set up some global structures to hold data****************
 
@@ -18,24 +64,23 @@ eegSession.frameStartsList = [];
 %here's the main data structure:
 
 %the eegD struct contains the following fields:
-% .data                     -  the first filed of the eegD cell structure will contain an 8 row array of doubles to hold eeg data 
+% .data                     -  the first filed of the eegD cell structure will contain an 1-8 row array of doubles to hold eeg data based on how many channels are enabled in the Avatar config file 
 %
-%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll
-%                                   collect one time stamp for each frame using tic() and then interpolate the others
-%
-%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  
-%You might want this if you want to try other interpolation approaches
-%
+%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll collect one time stamp for each frame using tic() and then interpolate the others
+% 
+%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
+% 
 %.corrupt                   -holds an account of any frames that fail a CRC
-%check
-
+ %check
  
  
 global eegD; eegD=struct; 
 eegD.data = double(zeros(EEG_Config.numChans,EEG_Config.sessionDuration*EEG_Config.SRate)); 
 eegD.time = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
+eegD.time2 = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.originalTimes = uint64([]);
 eegD.corrupt = [];  
+
 
 %%%%%%%%%%% Set up the serial port object%%%%%%%%%%
 %this is specific to the Mac OS but probably pretty similar on other
@@ -61,7 +106,7 @@ eegSession.EEGDevicePort.BytesAvailableFcnCount=EEG_Config.frameSize; % in bytes
 %register the callback to be called when the data buffer is full, pass it
 %the size of the epoch to get from the serial port buffer
 
-
+%Not implemented as far as I can see. 
 eegSession.elapsedTimeBetweenFrames = [];  %use tic and toc to actually measure the elapsed times between data frames.  It should be very very close to 1/sample rate * number of samples per frame
 eegSession.bestGuessAtDeltaT=uint64(0);  %on each frame we'll tic and average the most recent tics and try to make a best guess conversion factor to convert Avatar time to system time
 
@@ -74,7 +119,9 @@ eegSession.bestGuessAtDeltaT=uint64(0);  %on each frame we'll tic and average th
 if(strcmp(EEG_Config.version,'series2000'))
         eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_series2000; 
 elseif (strcmp(EEG_Config.version,'series3000'))
-        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_series3000;
+        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_Write;
+elseif (strcmp(EEG_Config.version,'series4000'))
+        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_Write;
 end
 
 eegSession.EEGDevicePort.UserData.isNew=0;
@@ -94,4 +141,5 @@ eegSession.btDataStreamReady = 1;
 
 %*******Now the data stream should be reading nicely into the eegD
 %array***********
+
 

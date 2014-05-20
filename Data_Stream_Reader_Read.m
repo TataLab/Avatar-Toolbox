@@ -1,16 +1,46 @@
-%Sets up serial communication with Avatar recorder and creates some
+%This file is capable of running any current version of the Avatar device,
+%it sets up serial communication with Avatar recorder and creates some
 %globals that will be needed to mediate data recording
 
 %Grab input from the user which series device they are using, and then call
 %the appropriate set up. 
+
+LoadYarp;
+import yarp.Port
+import yarp.DataProcessor
+import yarp.Bottle
+
+
+
+
+done=0;
+
+%port=BufferedPortBottle;
+port=Port;
+%first close the port just in case
+port.close;
+
+disp('Going to open port /matlab/read');
+port.open('/matlab/read');
+processor=DataProcessor;
+port.setReader(processor);
+
+disp('Please connect to a bottle sink (e.g. yarp write)');
+disp('The program closes when ''quit'' is received');
+
+
 dev=input('Which series device are you using: 2=2000, 3=3000, 4=4000: ');
+SN=input('What is your device serial number(ex:04035) : ', 's');
 
 if(dev==4)
 SetEEGConfig_series4000;  %call the setup script to configure settings
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
 elseif(dev==3)
 SetEEGConfig_series3000;
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
 elseif(dev==2)
 SetEEGConfig_series2000;
+EEG_Config.device=['/dev/tty.LairdBTM' SN '-SPPDev'];
 end
 
 %*********set up some global structures to hold data****************
@@ -28,15 +58,13 @@ eegSession.frameStartsList = [];
 
 %the eegD struct contains the following fields:
 % .data                     -  the first filed of the eegD cell structure will contain an 1-8 row array of doubles to hold eeg data based on how many channels are enabled in the Avatar config file 
-%.time                      - the second element of the eegD cell structure will contain a vector of
-%                                   uint64s to hold the time stamps,  we'll
-%                                   collect one time stamp for each frame
-%                                   using tic() and then interpolate the
-%                                   others
- %.originalTimes     - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
- %.corrupt                 -holds an account of any frames that fail a CRC
+%
+%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll collect one time stamp for each frame using tic() and then interpolate the others
+% 
+%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
+% 
+%.corrupt                   -holds an account of any frames that fail a CRC
  %check
- 
  
  
 global eegD; eegD=struct; 
@@ -45,6 +73,7 @@ eegD.time = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.time2 = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
 eegD.originalTimes = uint64([]);
 eegD.corrupt = [];  
+
 
 %%%%%%%%%%% Set up the serial port object%%%%%%%%%%
 %this is specific to the Mac OS but probably pretty similar on other
@@ -105,4 +134,5 @@ eegSession.btDataStreamReady = 1;
 
 %*******Now the data stream should be reading nicely into the eegD
 %array***********
+
 

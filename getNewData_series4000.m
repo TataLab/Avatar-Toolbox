@@ -117,8 +117,10 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         eegD.time2(1,eegSession.dataFrameIndex)=currentFrameSystemTime-uint64(EEG_Config.samplesPerFrame*1/EEG_Config.SRate*1000000000);
         %Rolling back the extra samples that were collected after the frame
         %we are timestamping. With the 4000 series it appears to always
-        %retrieve the data starting in the proper spot. 
-        eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
+        %retrieve the data starting in the proper spot.
+        if(frameStarts(2)+EEG_Config.headerSize<length(eegSession.D))
+            eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
+        end
         %Original time stamping method. 
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
         

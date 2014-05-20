@@ -1,4 +1,4 @@
-function getNewData_series4000(EEGDevicePort,~,~)
+function getNewData_Write(EEGDevicePort,~,~)
 %the strategy will be to use the vector D as a sort of FIFO buffer by
 %continuously pulling complete frames off the front while simultaneously
 %appending to the back
@@ -20,6 +20,10 @@ function getNewData_series4000(EEGDevicePort,~,~)
 global eegD;
 global EEG_Config;
 global eegSession;
+global bot;
+global port;
+global inTraining;
+global sendTrain;
 
 %grab the system time right away, we'll use it below
 currentFrameSystemTime = tic();
@@ -80,7 +84,7 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
             %with previous and future data?
        
         end
-        0
+        
         %***************End CRC Check****************** 
          
         %this proces takes 3x8bit words, merges them into a 24bit samples stored as 32-bit signed ints,
@@ -117,13 +121,14 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         eegD.time2(1,eegSession.dataFrameIndex)=currentFrameSystemTime-uint64(EEG_Config.samplesPerFrame*1/EEG_Config.SRate*1000000000);
         %Rolling back the extra samples that were collected after the frame
         %we are timestamping. With the 4000 series it appears to always
-        %retrieve the data starting in the proper spot. 
-        eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
+        %retrieve the data starting in the proper spot.
+        if(frameStarts(2)+EEG_Config.headerSize<length(eegSession.D))
+            eegD.time2(1,eegSession.dataFrameIndex)=eegD.time2(1,eegSession.dataFrameIndex)-uint64((length(eegSession.D)-(frameStarts(2)+EEG_Config.headerSize))/EEG_Config.bytesPerSample/EEG_Config.numChans* 1/EEG_Config.SRate * 1000000000);
+        end
         %Original time stamping method. 
         eegD.time(1,eegSession.dataFrameIndex)=currentFrameSystemTime - uint64(EEG_Config.samplesPerFrame * 1/EEG_Config.SRate * 1000000000);  %set the first sample of this time stamp to be an estimate of the system time when it was recorded.  Since we're chunking > 1 data frame we know it was at least sample period x num samples per frame ago 
         
         %********End Time data***********************
-        
         
         
         
@@ -133,6 +138,43 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         eegSession.D(1:EEG_Config.frameSize) = [];  %remove the entire first frame worth of data from the data buffer
         
         %*****End Clean up and update****************
+        
+        
+        
+        
+         %********Process Data To Write***************
+%         if(sendTrain)
+%         if(eegSession.dataFrameIndex>=inTraining)
+%            bb= tic
+%            % for i=1:EEG_Config.numChans
+%                 for j=eegSession.dataFrameIndex-1:-1:1
+%                     bot.addDouble(eegD.data(1,eegSession.dataFrameIndex-j));
+%                 end
+%             %end
+%             
+%              sendTrain=0;
+%         end
+%        
+%         end
+            
+         
+        if(eegSession.dataFrameIndex>=inTraining)
+            bb=tic
+            
+            %for i=1:EEG_Config.numChans
+                for j=500:-1:1
+                    bot.addDouble(eegD.data(1,eegSession.dataFrameIndex-j));
+                end
+            %end
+            %If you want constant sending of data take this line out. 
+            inTraining=inTraining+500;
+            
+            port.write(bot);
+        end
+        
+        %*********End Process Write*******************
+        
+        
         
         
         %check to see if we've run out of session

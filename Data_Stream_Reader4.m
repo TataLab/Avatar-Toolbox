@@ -3,15 +3,11 @@
 
 %Grab input from the user which series device they are using, and then call
 %the appropriate set up. 
-dev=input('Which series device are you using: 2=2000, 3=3000, 4=4000: ');
+SN=input('What is your device serial number(ex:04035) : ', 's');
 
-if(dev==4)
 SetEEGConfig_series4000;  %call the setup script to configure settings
-elseif(dev==3)
-SetEEGConfig_series3000;
-elseif(dev==2)
-SetEEGConfig_series2000;
-end
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
+
 
 %*********set up some global structures to hold data****************
 
