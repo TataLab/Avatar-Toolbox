@@ -182,6 +182,9 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
             eegSession.btDataStreamReady=0;
             fclose(eegSession.EEGDevicePort);
             display('Problem.  You ran out of session duration. Abort.');
+            bot.fromString('quit');
+            port.write(bot);
+            port.close;
         end
         
     end %if size is bigger than two data frames

@@ -35,7 +35,7 @@ disp('Please connect to a bottle sink (e.g. yarp write)');
 disp('The program closes when ''quit'' is received');
 
 theData=[];
-disp(['Keep eyes open for the ', num2str(trainLen), ' second training session. A message will appear when the training is complete');
+disp(['Keep eyes open for the ', num2str(trainLen), ' second training session. A message will appear when the training is complete']);
 
 %Enter the training session the subject must keep their eyes open during
 %this time. A sample is taken every second and then with these samples we
