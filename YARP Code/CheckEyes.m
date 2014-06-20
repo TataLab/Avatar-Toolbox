@@ -15,6 +15,10 @@ trainLen=30;
 %less than trainLen. 
 setDelay=10;
 
+%Sets the amount of seconds/samples that go into calculating the linear
+%shift in the EEG data. 
+dataLen=trainLen-setDelay;
+
 %Create a bottle to act as a buffer reading data from the file that is
 %actually streaming eeg data.
 b=Bottle;
@@ -66,13 +70,13 @@ for k=1:trainLen
 end
 
 linearShift=0;
-for i=1:length(trainingVal)-1
+for i=1:dataLen-1
 	linearShift=linearShift+(trainingVal(i+1)-trainingVal(i));
 end
 
 %linearShift now holds the amount that the eeg signal has been shifting
 %either upwards or downwards during the training session. 
-linearShift=linearShift/(length(trainingVal)-1);
+linearShift=linearShift/(dataLen-1);
 
 %Or call linearShift=0 if there is no shifting in the EEG data. 
 %linearShift=0;
