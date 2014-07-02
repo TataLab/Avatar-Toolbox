@@ -181,6 +181,8 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
         if((eegSession.dataFrameIndex/EEG_Config.SRate)>=EEG_Config.sessionDuration)
             eegSession.btDataStreamReady=0;
             fclose(eegSession.EEGDevicePort);
+            delete(eegSession.EEGDevicePort)
+            clear eegSession.EEGDevicePort
             display('Problem.  You ran out of session duration. Abort.');
             bot.fromString('quit');
             port.write(bot);

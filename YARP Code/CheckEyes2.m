@@ -54,10 +54,10 @@ disp(['Keep eyes open to start the test. Every time you hear a beep alternate wh
 %that we will be able to track the change of eyes open or closed in real
 %time. 
 
-Fs = 1000;      %# Samples per second
+Fs2 = 1000;      %# Samples per second
 toneFreq = 500;  %# Tone frequency, in Hertz
 nSeconds = 0.5;   %# Duration of the sound
-y = sin(linspace(0, nSeconds*toneFreq*2*pi, round(nSeconds*Fs)));
+y = sin(linspace(0, nSeconds*toneFreq*2*pi, round(nSeconds*Fs2)));
 
 %one issue to adress is what if it is an increase in the negative direction
 %so we will have to do something using absolute values but first checking
@@ -78,7 +78,7 @@ for k=1:trainLen
     desired2 = find(freq >=10,1,'first');
     trainingVal(k)=mean(xdft(desired2:desired1));
     if mod(k,2) == 0
-        sound(y,Fs);
+        sound(y,Fs2);
     end
 end
 
