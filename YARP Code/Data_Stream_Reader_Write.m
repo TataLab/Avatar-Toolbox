@@ -18,9 +18,9 @@ global sendTrain;
 
 sendTrain=1;
 
-inTraining=500;
+inTraining=257;
 
-frameSize=500;
+frameSize=256;
 
 bot=Bottle;
 
@@ -32,7 +32,7 @@ port.close;
 disp('Going to open port /matlab/write');
 port.open('/matlab/write');
 
-disp('Please connect to a bottle sink (e.g. yarp write)');
+disp('Port open now start CheckEyes and it will be connected to port in that program');
 disp('The program closes when ''quit'' is received');
 
 

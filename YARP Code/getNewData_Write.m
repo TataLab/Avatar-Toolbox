@@ -24,6 +24,7 @@ global bot;
 global port;
 global inTraining;
 global sendTrain;
+global frameSize;
 
 %grab the system time right away, we'll use it below
 currentFrameSystemTime = tic();
@@ -162,14 +163,15 @@ if eegSession.btDataStreamReady==1 %don't start recording until we're ready (e.g
             bb=tic
             
             %for i=1:EEG_Config.numChans
-                for j=500:-1:1
-                    bot.addDouble(eegD.data(1,eegSession.dataFrameIndex-j));
+                for j=frameSize:-1:1
+                    bot.addDouble(eegD.data(1,inTraining-j));
                 end
             %end
             %If you want constant sending of data take this line out. 
-            inTraining=inTraining+500;
+            inTraining=inTraining+frameSize;
             
             port.write(bot);
+            bot.clear();
         end
         
         %*********End Process Write*******************
