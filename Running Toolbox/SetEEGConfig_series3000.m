@@ -21,7 +21,7 @@ display(['dataBytesPerFrame is set to ' num2str(EEG_Config.dataBytesPerFrame)]);
 display(['frame size is set to ' num2str(EEG_Config.frameSize)]);
 
 EEG_Config.fractionalSeconds = 4096;  %number of ticks of the fractional seconds counter between seconds
-EEG_Config.voltageRange = double(9.0 );  %a function of the gain setting in your config.txt file on the microSD card...look it up in the docs...for gain of 12 (typical for EEG) use voltage range of 0.75...for gain of 1 (good for inputing signals for testing) use voltage range of 9.0
+EEG_Config.voltageRange = double(0.75 );  %a function of the gain setting in your config.txt file on the microSD card...look it up in the docs...for gain of 12 (typical for EEG) use voltage range of 0.75...for gain of 1 (good for inputing signals for testing) use voltage range of 9.0
 
 
 %these are parameters specific to your data collection session

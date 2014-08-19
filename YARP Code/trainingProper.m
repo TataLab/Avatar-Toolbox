@@ -1,4 +1,4 @@
-function [ rawData, trainingVal, trainOpen, trainClose ] = training(trainLen, setDelay, port, b, Fs,minFreq,maxFreq)
+function [ trainingBins, rawData] = training(trainLen, setDelay, port, b, Fs,minFreq,maxFreq)
 %This function will train a user by simply making them switch between
 %opening their eyes and closing their eyes every two seconds. It then
 %calculates the change in eeg activity from one state to the other to be
@@ -15,15 +15,18 @@ sound(y,Fs2);
 %raw data from each second of eeg activity. 
 x=[];
 %The mean of alpha activity stored over each second. 
-rawData=zeros(trainLen*4,256);
-trainingVal=zeros(1,trainLen*4);
-trainOpen=zeros(1,trainLen);
-trainClose=zeros(1,trainLen);
+rawData=zeros(trainLen*16,256);
+trainingVal=zeros(1,trainLen*16);
+trainOpen=zeros(1,trainLen*7);
+trainClose=zeros(1,trainLen*7);
 
 %initial loop to ignore the first samples until we are past the setDelay.
 for k=1:setDelay
     port.read(b);
 end
+
+%build the training bins
+trainingBins=zeros(trainLen*16,4);
 
 track=1;
 tracko=1;
@@ -31,30 +34,32 @@ trackc=1;
 %Enter the training loop that will switch states and add the alpha activity
 %over each recorded second to the vector trainingVal.
 for k=1:trainLen
-    for l=1:4
+    for l=1:16
     ok=port.read(b);
+    location=(k-1)*16+l;
     
     x=str2num(char(b.toString()));
-    rawData((k-1)*4+l,1:end)=x;
+    rawData(location,1:end)=x;
     
     
-   [data,freq]=periodogram(x,[],Fs);
-  
-    desired1 = find(freq >= (minFreq/(Fs/2))*pi,1,'first');
-    desired2 = find(freq <=(maxFreq/(Fs/2))*pi,1,'last');
-    tempVal= mean(data(desired1:desired2)); 
-   if(l==2 || l==3)
-   if (mod(k,2))
-        trainOpen(tracko)=tempVal;
-        tracko=tracko+1;
-   else
-        trainClose(trackc)=tempVal;
-        trackc=trackc+1;
-   end
-   end
-   
+   [temp,freqs]=periodogram(x,[],[],500,'one-sided');
+   pGrams=temp;
     
-    trainingVal(track)=tempVal;
+
+%define some frequency bins
+delta=[find(freqs>=1,1,'first') find(freqs>=4,1,'first')];
+theta=[find(freqs>=5,1,'first') find(freqs>=9,1,'first')];
+alpha=[find(freqs>=10,1,'first') find(freqs>=14,1,'first')];
+beta=[find(freqs>=15,1,'first') find(freqs>=25,1,'first')];
+
+
+
+
+    trainingBins(location,1)=mean(pGrams(delta(1):delta(2)));
+    trainingBins(location,2)=mean(pGrams(theta(1):theta(2)));
+    trainingBins(location,3)=mean(pGrams(alpha(1):alpha(2)));
+    trainingBins(location,4)=mean(pGrams(beta(1):beta(2)));
+
     track=track+1;
     end
     sound(y,Fs2);

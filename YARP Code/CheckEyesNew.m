@@ -10,7 +10,7 @@ SetEEGConfig_series4000;
 %Set the variable Fs to the sampling rate in the device's config file. 
 Fs = EEG_Config.SRate;
 %Set the length of time you wish to train the user in seconds. 
-trainLen=16; %must be even number
+trainLen=20; %must be even number
 %Set the amount of time in seconds that will be ignored at the start of the
 %training session to allow the device to compose itself. Note this will be
 %added onto the time trainLen but will simply be ignored so that the all
@@ -48,29 +48,40 @@ disp(['beep alternate which state your eyes are in (if open then close them, if 
 min=10;
 max=14;
 
-[trainingVal, trainOpen, trainClose]=training(trainLen,setDelay,port,b,Fs,min,max);
+%[rawData, trainingVal, trainOpen, trainClose]=training(trainLen,setDelay,port,b,Fs,min,max);
 
-plot(trainingVal);
+[rawData, trainingVal, trainOpen, trainClose]=trainingLonger(trainLen,setDelay,port,b,Fs,min,max);
 
 
-% for i=7:4:trainLen-2
-%     totClose=trainingVal(i+1)-trainingVal(i);
-%     drift=trainingVal(i+2)-trainingVal(i+1);
-%     changeClosed(tracker)=totClose-drift;
-%     tracker=tracker+1;
-% end
-% tracker=1;
-% for i=17:4:trainLen-2
-%     totOpen=trainingVal(i+1)-trainingVal(i);
-%     drift=trainingVal(i+2)-trainingVal(i+1);
-%     changeOpen(tracker)=totOpen-drift;
-%     tracker=tracker+1;
-% end
-% 
-% avOpen=mean(changeOpen);
-% avClose=mean(changeClosed);
-% 
-% drift=trainingVal(end)-trainingVal(end-1);
+%plot(trainingVal);
+
+changeOpen=[];
+changeClosed=[];
+tracker=1;
+for i=7:4:(trainLen*4)-2
+    totClose=trainingVal(i+1)-trainingVal(i);
+    drift=trainingVal(i+2)-trainingVal(i+1);
+    changeClosed(tracker)=totClose-drift;
+    tracker=tracker+1;
+end
+tracker=1;
+for i=17:4:(trainLen*4)-2
+    totOpen=trainingVal(i+1)-trainingVal(i);
+    drift=trainingVal(i+2)-trainingVal(i+1);
+    changeOpen(tracker)=totOpen-drift;
+    tracker=tracker+1;
+end
+
+avOpen=mean(changeOpen);
+avClose=mean(changeClosed);
+
+drift=trainingVal(end)-trainingVal(end-1);
+norm=trainingVal(end);
+
+
+%done=Session(port,b,norm,avOpen,avClose,drift,Fs,min,max);
+
+
 
 port.close
 
