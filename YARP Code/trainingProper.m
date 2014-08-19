@@ -26,7 +26,7 @@ for k=1:setDelay
 end
 
 %build the training bins
-trainingBins=zeros(trainLen*16,4);
+trainingBins=zeros(trainLen*14,4);
 
 track=1;
 tracko=1;
@@ -41,7 +41,7 @@ for k=1:trainLen
     x=str2num(char(b.toString()));
     rawData(location,1:end)=x;
     
-    
+   if(l>2) 
    [temp,freqs]=periodogram(x,[],[],500,'one-sided');
    pGrams=temp;
     
@@ -55,12 +55,13 @@ beta=[find(freqs>=15,1,'first') find(freqs>=25,1,'first')];
 
 
 
-    trainingBins(location,1)=mean(pGrams(delta(1):delta(2)));
-    trainingBins(location,2)=mean(pGrams(theta(1):theta(2)));
-    trainingBins(location,3)=mean(pGrams(alpha(1):alpha(2)));
-    trainingBins(location,4)=mean(pGrams(beta(1):beta(2)));
+    trainingBins(track,1)=mean(pGrams(delta(1):delta(2)));
+    trainingBins(track,2)=mean(pGrams(theta(1):theta(2)));
+    trainingBins(track,3)=mean(pGrams(alpha(1):alpha(2)));
+    trainingBins(track,4)=mean(pGrams(beta(1):beta(2)));
 
     track=track+1;
+   end
     end
     sound(y,Fs2);
     end

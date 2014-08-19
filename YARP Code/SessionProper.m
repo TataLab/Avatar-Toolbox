@@ -5,7 +5,7 @@ function done= Session( port, b, Fs, model )
 
 %Variable for storing raw eeg data.
 x=[];
-sesLen=120;
+sesLen=240;
 %set to 0 if we should stay in the while loop set to 1 if we want to leave
 %the while loop.
 done=0;
