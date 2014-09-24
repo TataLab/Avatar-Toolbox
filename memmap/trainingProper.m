@@ -1,9 +1,12 @@
-function [ trainingBins, rawData] = training(trainLen, setDelay, port, b, Fs,minFreq,maxFreq)
+function [ trainingBins, rawData] = trainingProper(trainLen, setDelay, Fs,minFreq,maxFreq)
 %This function will train a user by simply making them switch between
 %opening their eyes and closing their eyes every two seconds. It then
 %calculates the change in eeg activity from one state to the other to be
-%used later. 
-disp('correctus');
+%used later.
+global memFile;
+numChans=1;
+frameData=zeros(numChans, 256);
+
 Fs2 = 1000;      %# Samples per second
 toneFreq = 500;  %# Tone frequency, in Hertz
 nSeconds = 0.5;   %# Duration of the sound
@@ -21,8 +24,13 @@ trainOpen=zeros(1,trainLen*7);
 trainClose=zeros(1,trainLen*7);
 
 %initial loop to ignore the first samples until we are past the setDelay.
-for k=1:setDelay
-    port.read(b);
+k=1;
+while(k<=setDelay)
+    memFile.Data.d(1:numChans,:)
+if(memFile.Data.d(1:numChans,:)~=frameData)
+k=k+1;
+frameData=memFile.Data.d(1:numChans,:);
+end
 end
 
 %build the training bins
@@ -33,12 +41,19 @@ tracko=1;
 trackc=1;
 %Enter the training loop that will switch states and add the alpha activity
 %over each recorded second to the vector trainingVal.
-for k=1:trainLen
-    for l=1:16
-    ok=port.read(b);
+k=1;
+while k<=trainLen
+l=1;
+while l<=16
+if(memFile.Data.d(1:numChans,:)~=frameData)
+l=l+1;
+frameData=memFile.Data.d(1:numChans,:);
+
+
+
     location=(k-1)*16+l;
     
-    x=str2num(char(b.toString()));
+x=frameData;
     rawData(location,1:end)=x;
     
    if(l>2) 
@@ -63,6 +78,8 @@ beta=[find(freqs>=15,1,'first') find(freqs>=25,1,'first')];
     track=track+1;
    end
     end
+   end
+k=k+1;
     sound(y,Fs2);
     end
    

@@ -1,0 +1,137 @@
+%This file is capable of running any current version of the Avatar device,
+%it sets up serial communication with Avatar recorder and creates some
+%globals that will be needed to mediate data recording
+
+%Grab input from the user which series device they are using, and then call
+%the appropriate set up. 
+dev=input('Which series device are you using: 2=2000, 3=3000, 4=4000: ');
+SN=input('What is your device serial number(ex:04035) : ', 's');
+
+if(dev==4)
+SetEEGConfig_series4000;  %call the setup script to configure settings
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
+elseif(dev==3)
+SetEEGConfig_series3000;
+EEG_Config.device=['/dev/tty.AvatarEEG' SN '-SPPDev'];
+elseif(dev==2)
+SetEEGConfig_series2000;
+EEG_Config.device=['/dev/tty.LairdBTM' SN '-SPPDev'];
+end
+
+global frameSize;
+frameSize=256;
+
+%*********set up memmap************
+D=double(zeros(EEG_Config.numChans+1,frameSize)); %zeros returns doubles, so typecast to singles, add a channel for time stamps
+
+%make an array initialized to be filled with zeros
+
+%make a file in the normal way
+fileID=fopen('./eegData.dat','w'); %open for writing
+fwrite(fileID,D,'double'); %write it with the appropriate format
+fclose(fileID); %close in the normal way
+clear fileID D ans; %clean up the workspace
+
+%now map this file into memory
+global memFile;
+memFile=memmapfile('eegData.dat','format',{'double' [EEG_Config.numChans+1 frameSize] 'd'}, 'writable',true); %the format cell array is key.  This describes the "shape" of your data.  The "d" tells MATLAB what to call the data structure. The +1 prepares an extra channel for timestamps
+
+
+%*********set up some global structures to hold data****************
+
+%global frameSize=256;
+global whereAt;
+whereAt=256;
+global currentEEGFrame;
+currentEEGFrame=double(zeros(EEG_Config.numChans+1,frameSize));
+
+%eegSession will hold some key settings as well as some temp variables, mostly you won't need to look under this hood
+global eegSession;  eegSession=struct;  
+eegSession.D = []; %will act as a frame buffer to hold partial frames across callbacks
+eegSession.D = cast(eegSession.D,'uint8'); %force the array to be 1-byte ints
+eegSession.dataFrameIndex = 1; %a book keeping index to keep track of where to write the next data frame into the eegD array
+eegSession.btDataStreamReady = 0;  % a flag to indicate all is well
+eegSession.frameStartsList = [];
+
+
+%here's the main data structure:
+
+%the eegD struct contains the following fields:
+% .data                     -  the first filed of the eegD cell structure will contain an 1-8 row array of doubles to hold eeg data based on how many channels are enabled in the Avatar config file 
+%
+%.time                      - the second element of the eegD cell structure will contain a vector of uint64s to hold the time stamps,  we'll collect one time stamp for each frame using tic() and then interpolate the others
+% 
+%.originalTimes             - the third element holds only the time stamps corresponding to the "tic'd" samples; that is, without interpolation.  You might want this if you want to try other interpolation approaches
+% 
+%.corrupt                   -holds an account of any frames that fail a CRC
+ %check
+ 
+ 
+global eegD; eegD=struct; 
+eegD.data = double(zeros(EEG_Config.numChans,EEG_Config.sessionDuration*EEG_Config.SRate)); 
+eegD.time = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
+eegD.time2 = uint64(zeros(1,EEG_Config.sessionDuration*EEG_Config.SRate));
+eegD.originalTimes = uint64([]);
+eegD.corrupt = [];  
+
+
+%%%%%%%%%%% Set up the serial port object%%%%%%%%%%
+%this is specific to the Mac OS but probably pretty similar on other
+%platforms.  If you modify this to work on windows or linux or etc. please
+%make a new version and share it with the community
+
+display('will try to get some data');
+
+serialDeviceName = EEG_Config.device;
+%create the serial port object
+eegSession.EEGDevicePort = serial(serialDeviceName);
+
+clear serialDeviceName; %we don't need it cluttering up the workspace
+
+%set appropriately for Avatar device
+eegSession.EEGDevicePort.BaudRate=115200;
+eegSession.EEGDevicePort.InputBufferSize = EEG_Config.frameSize; 
+eegSession.EEGDevicePort.OutputBufferSize=10; %number of bytes for a time-set write frame
+eegSession.EEGDevicePort.ByteOrder = 'bigEndian';
+
+eegSession.EEGDevicePort.BytesAvailableFcnMode='byte';
+eegSession.EEGDevicePort.BytesAvailableFcnCount=EEG_Config.frameSize; % in bytes .BytesAvailableFcn will be called when this number is reached
+%register the callback to be called when the data buffer is full, pass it
+%the size of the epoch to get from the serial port buffer
+
+%Not implemented as far as I can see. 
+eegSession.elapsedTimeBetweenFrames = [];  %use tic and toc to actually measure the elapsed times between data frames.  It should be very very close to 1/sample rate * number of samples per frame
+eegSession.bestGuessAtDeltaT=uint64(0);  %on each frame we'll tic and average the most recent tics and try to make a best guess conversion factor to convert Avatar time to system time
+
+
+%2000 series and 3000 series Avatar recorders have different data formats
+%(the time structures arive at different points in the data stream)
+%so we need to register different callbacks for the two different devices
+%this is controled by a line in EEG_Config
+
+if(strcmp(EEG_Config.version,'series2000'))
+        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_series2000; 
+elseif (strcmp(EEG_Config.version,'series3000'))
+        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_series3000;
+elseif (strcmp(EEG_Config.version,'series4000'))
+        eegSession.EEGDevicePort.BytesAvailableFcn = @getNewData_series4000;
+end
+
+eegSession.EEGDevicePort.UserData.isNew=0;
+
+close; %close the serial port if it is open
+%open the serial port data stream
+display('Serial port is ...');
+if( strcmp(eegSession.EEGDevicePort.Status,'open') == 0) %open the port if necessary
+    fopen(eegSession.EEGDevicePort);
+end
+
+display(['...' eegSession.EEGDevicePort.Status]);
+
+pause(1);  %give the serial port hardware a moment to compose itself before recording data
+
+eegSession.btDataStreamReady = 1;
+
+%*******Now the data stream should be reading nicely into the eegD
+%array***********
+
