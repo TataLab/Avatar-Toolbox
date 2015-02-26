@@ -1,0 +1,9 @@
+WRITE_TO_SD            = 0
+BLUETOOTH_ON           = 1
+BLUETOOTH_DISCOVER     = 1
+DEMO_MODE              = 1
+SINGLE_ENDED           = 0
+ENABLE_TRIGGER_CHANNEL = 0
+NUMBER_EEG_CHANNELS    = 8
+STORAGE_RATE           = 500
+BLUETOOTH_TX_RATE      = 500
